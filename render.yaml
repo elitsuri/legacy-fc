@@ -1,0 +1,21 @@
+# Render Blueprint: Render -> New -> Blueprint -> pick this repository.
+# It builds the Dockerfile; the values marked sync:false are asked for in the Render dashboard (never commit them).
+services:
+  - type: web
+    name: legacy-fc
+    runtime: docker
+    plan: free            # sleeps when idle; use "starter" or above for real players
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true   # Render creates a random secret; nobody has to see or paste it
+      - key: DATABASE_URL     # the hosted PostgreSQL connection string (Neon/Supabase), ?sslmode=require
+        sync: false
+      - key: STRIPE_SECRET_KEY      # leave empty on the first deploy (payments off), then sk_test_...
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET  # whsec_... from the Stripe webhook endpoint
+        sync: false
+      # PUBLIC_BASE_URL is optional on Render: the app uses Render's own https address. Set it when you add your own domain.

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "game",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:\\Users\\TempAdmin\\Desktop\\legacy-fc\\e2e\\serve.cjs", "C:\\Users\\TempAdmin\\Desktop\\legacy-fc\\frontend\\public", "5178"],
+      "port": 5178
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+**/node_modules
+**/.venv
+**/__pycache__
+**/dist
+backend/data
+.env
+.git
+e2e/*.png
+e2e/shots
+e2e/out-*.txt
+backups

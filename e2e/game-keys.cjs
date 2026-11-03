@@ -1,0 +1,7 @@
+// Movement keys: WASD (and arrows) move on an English layout AND on a Hebrew layout (physical keys, e.code).
+const puppeteer=require('puppeteer-core');const wait=ms=>new Promise(r=>setTimeout(r,ms));const FILE=process.argv[2];const R=[];const ok=(n,c,x)=>R.push((c?'PASS ':'FAIL ')+n+(x?' — '+x:''));
+(async()=>{const b=await puppeteer.launch({executablePath:process.env.CHROME_PATH,headless:true});const p=await b.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+FILE);await wait(800);
+await p.evaluate(()=>{localStorage.clear();initPlayer('Finisher','Professional');title=false;dlg=null;menu=null;scr=null;S.x=300;S.y=300});
+const cases=[['English W','w','KeyW','u'],['English A','a','KeyA','l'],['English S','s','KeyS','d'],['English D','d','KeyD','r'],['Hebrew W (apostrophe)',"'",'KeyW','u'],['Hebrew A (ש)','ש','KeyA','l'],['Hebrew S (ד)','ד','KeyS','d'],['Hebrew D (ג)','ג','KeyD','r'],['Arrow up','ArrowUp','ArrowUp','u']];
+for(const [n,key,code,dir] of cases){await p.evaluate(()=>{held=[]});await p.evaluate((k,c)=>dispatchEvent(new KeyboardEvent('keydown',{key:k,code:c,bubbles:true})),key,code);const h=await p.evaluate(()=>held.slice());await p.evaluate((k,c)=>dispatchEvent(new KeyboardEvent('keyup',{key:k,code:c,bubbles:true})),key,code);const h2=await p.evaluate(()=>held.slice());ok(n+' → '+dir,h.includes(dir)&&!h2.length,JSON.stringify([h,h2]))}
+console.log(R.join('\n'));console.log('page errors',JSON.stringify(errs));await b.close();process.exit(R.some(x=>x.startsWith('FAIL'))?1:0)})();

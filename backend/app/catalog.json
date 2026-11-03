@@ -1,0 +1,449 @@
+{
+ "currency": "ils",
+ "unit": "whole shekels (the game shows ₪ + price); Stripe amounts are price*100 agorot",
+ "items": [
+  {
+   "id": "c2.ball.classic",
+   "cat": "balls",
+   "price": 5,
+   "name": "Classic Ball",
+   "contents": null
+  },
+  {
+   "id": "c2.ball.gold",
+   "cat": "balls",
+   "price": 9,
+   "name": "Gold Ball",
+   "contents": null
+  },
+  {
+   "id": "c2.ball.match",
+   "cat": "balls",
+   "price": 7,
+   "name": "Match Ball",
+   "contents": null
+  },
+  {
+   "id": "c2.ball.night",
+   "cat": "balls",
+   "price": 9,
+   "name": "Night Ball",
+   "contents": null
+  },
+  {
+   "id": "c2.ball.pro",
+   "cat": "balls",
+   "price": 7,
+   "name": "Pro Ball",
+   "contents": null
+  },
+  {
+   "id": "c2.ball.street",
+   "cat": "balls",
+   "price": 5,
+   "name": "Street Ball",
+   "contents": null
+  },
+  {
+   "id": "c2.boots.classic_black",
+   "cat": "boots",
+   "price": 5,
+   "name": "Classic Boots",
+   "contents": null
+  },
+  {
+   "id": "c2.boots.control_navy",
+   "cat": "boots",
+   "price": 7,
+   "name": "Control Boots",
+   "contents": null
+  },
+  {
+   "id": "c2.boots.crimson_fire",
+   "cat": "boots",
+   "price": 7,
+   "name": "Fire Boots",
+   "contents": null
+  },
+  {
+   "id": "c2.boots.gold_elite",
+   "cat": "boots",
+   "price": 12,
+   "name": "Elite Gold Boots",
+   "contents": null
+  },
+  {
+   "id": "c2.boots.ice_blade",
+   "cat": "boots",
+   "price": 9,
+   "name": "Ice Blade Boots",
+   "contents": null
+  },
+  {
+   "id": "c2.boots.speed_neon",
+   "cat": "boots",
+   "price": 9,
+   "name": "Speed Boots",
+   "contents": null
+  },
+  {
+   "id": "c2.bundle.emerald",
+   "cat": "bund",
+   "price": 12,
+   "name": "Emerald Kit Bundle",
+   "contents": [
+    "c2.shirt.home_emerald",
+    "c2.shorts.white",
+    "c2.socks.emerald"
+   ]
+  },
+  {
+   "id": "c2.bundle.legend",
+   "cat": "bund",
+   "price": 15,
+   "name": "Legend Bundle",
+   "contents": [
+    "c2.shirt.gold_legend",
+    "c2.boots.gold_elite",
+    "c2.ball.gold"
+   ]
+  },
+  {
+   "id": "c2.bundle.midnight",
+   "cat": "bund",
+   "price": 12,
+   "name": "Midnight Kit Bundle",
+   "contents": [
+    "c2.shirt.third_navy",
+    "c2.shorts.navy",
+    "c2.socks.navy"
+   ]
+  },
+  {
+   "id": "c2.bundle.street",
+   "cat": "bund",
+   "price": 15,
+   "name": "Street Bundle",
+   "contents": [
+    "c2.shirt.street_neon",
+    "c2.ball.street",
+    "c2.boots.speed_neon"
+   ]
+  },
+  {
+   "id": "c2.cap.crimson",
+   "cat": "acc",
+   "price": 5,
+   "name": "Crimson Cap",
+   "contents": null
+  },
+  {
+   "id": "c2.cap.navy",
+   "cat": "acc",
+   "price": 5,
+   "name": "Midnight Cap",
+   "contents": null
+  },
+  {
+   "id": "c2.cel.jump",
+   "cat": "cel",
+   "price": 7,
+   "name": "Jump Celebration",
+   "contents": null
+  },
+  {
+   "id": "c2.cel.slide",
+   "cat": "cel",
+   "price": 7,
+   "name": "Slide Celebration",
+   "contents": null
+  },
+  {
+   "id": "c2.cel.spin",
+   "cat": "cel",
+   "price": 7,
+   "name": "Spin Celebration",
+   "contents": null
+  },
+  {
+   "id": "c2.chain.gold",
+   "cat": "acc",
+   "price": 7,
+   "name": "Gold Chain",
+   "contents": null
+  },
+  {
+   "id": "c2.chain.silver",
+   "cat": "acc",
+   "price": 5,
+   "name": "Silver Chain",
+   "contents": null
+  },
+  {
+   "id": "c2.frame.gold",
+   "cat": "vis",
+   "price": 5,
+   "name": "Gold Portrait Frame",
+   "contents": null
+  },
+  {
+   "id": "c2.frame.ice",
+   "cat": "vis",
+   "price": 5,
+   "name": "Ice Portrait Frame",
+   "contents": null
+  },
+  {
+   "id": "c2.frame.neon",
+   "cat": "vis",
+   "price": 5,
+   "name": "Neon Portrait Frame",
+   "contents": null
+  },
+  {
+   "id": "c2.glass.dark",
+   "cat": "acc",
+   "price": 5,
+   "name": "Dark Shades",
+   "contents": null
+  },
+  {
+   "id": "c2.glass.gold",
+   "cat": "acc",
+   "price": 5,
+   "name": "Gold Shades",
+   "contents": null
+  },
+  {
+   "id": "c2.head.black",
+   "cat": "acc",
+   "price": 3,
+   "name": "Black Headband",
+   "contents": null
+  },
+  {
+   "id": "c2.head.royal",
+   "cat": "acc",
+   "price": 3,
+   "name": "Royal Headband",
+   "contents": null
+  },
+  {
+   "id": "c2.head.white",
+   "cat": "acc",
+   "price": 3,
+   "name": "White Headband",
+   "contents": null
+  },
+  {
+   "id": "c2.out.hoodie_slate",
+   "cat": "outfits",
+   "price": 9,
+   "name": "Slate Hoodie",
+   "contents": null
+  },
+  {
+   "id": "c2.out.jacket_navy",
+   "cat": "outfits",
+   "price": 12,
+   "name": "Midnight Jacket",
+   "contents": null
+  },
+  {
+   "id": "c2.out.retro_sun",
+   "cat": "outfits",
+   "price": 9,
+   "name": "Retro Sun Track Top",
+   "contents": null
+  },
+  {
+   "id": "c2.out.track_emerald",
+   "cat": "outfits",
+   "price": 9,
+   "name": "Emerald Tracksuit",
+   "contents": null
+  },
+  {
+   "id": "c2.shirt.away_crimson",
+   "cat": "kits",
+   "price": 9,
+   "name": "Crimson Away Shirt",
+   "contents": null
+  },
+  {
+   "id": "c2.shirt.gold_legend",
+   "cat": "kits",
+   "price": 12,
+   "name": "Gold Legend Shirt",
+   "contents": null
+  },
+  {
+   "id": "c2.shirt.home_emerald",
+   "cat": "kits",
+   "price": 9,
+   "name": "Emerald Home Shirt",
+   "contents": null
+  },
+  {
+   "id": "c2.shirt.ice_stripes",
+   "cat": "kits",
+   "price": 7,
+   "name": "Ice Stripes Shirt",
+   "contents": null
+  },
+  {
+   "id": "c2.shirt.retro_sun",
+   "cat": "kits",
+   "price": 7,
+   "name": "Sunburst Retro Shirt",
+   "contents": null
+  },
+  {
+   "id": "c2.shirt.royal_sash",
+   "cat": "kits",
+   "price": 12,
+   "name": "Royal Sash Shirt",
+   "contents": null
+  },
+  {
+   "id": "c2.shirt.street_neon",
+   "cat": "kits",
+   "price": 9,
+   "name": "Neon Streetwear Shirt",
+   "contents": null
+  },
+  {
+   "id": "c2.shirt.third_navy",
+   "cat": "kits",
+   "price": 9,
+   "name": "Midnight Third Shirt",
+   "contents": null
+  },
+  {
+   "id": "c2.shirt.train_slate",
+   "cat": "kits",
+   "price": 5,
+   "name": "Slate Training Shirt",
+   "contents": null
+  },
+  {
+   "id": "c2.shirt.violet_hoops",
+   "cat": "kits",
+   "price": 9,
+   "name": "Violet Hoops Shirt",
+   "contents": null
+  },
+  {
+   "id": "c2.shorts.crimson",
+   "cat": "kits",
+   "price": 3,
+   "name": "Crimson Shorts",
+   "contents": null
+  },
+  {
+   "id": "c2.shorts.emerald",
+   "cat": "kits",
+   "price": 3,
+   "name": "Emerald Shorts",
+   "contents": null
+  },
+  {
+   "id": "c2.shorts.navy",
+   "cat": "kits",
+   "price": 3,
+   "name": "Midnight Shorts",
+   "contents": null
+  },
+  {
+   "id": "c2.shorts.white",
+   "cat": "kits",
+   "price": 3,
+   "name": "White Shorts",
+   "contents": null
+  },
+  {
+   "id": "c2.socks.crimson",
+   "cat": "kits",
+   "price": 3,
+   "name": "Crimson Socks",
+   "contents": null
+  },
+  {
+   "id": "c2.socks.emerald",
+   "cat": "kits",
+   "price": 3,
+   "name": "Emerald Socks",
+   "contents": null
+  },
+  {
+   "id": "c2.socks.navy",
+   "cat": "kits",
+   "price": 3,
+   "name": "Midnight Socks",
+   "contents": null
+  },
+  {
+   "id": "c2.socks.sun",
+   "cat": "kits",
+   "price": 3,
+   "name": "Sunburst Socks",
+   "contents": null
+  },
+  {
+   "id": "c2.trail.gold",
+   "cat": "vis",
+   "price": 7,
+   "name": "Gold Ball Trail",
+   "contents": null
+  },
+  {
+   "id": "c2.trail.neon",
+   "cat": "vis",
+   "price": 7,
+   "name": "Neon Ball Trail",
+   "contents": null
+  },
+  {
+   "id": "c2.watch.black",
+   "cat": "acc",
+   "price": 5,
+   "name": "Black Sport Watch",
+   "contents": null
+  },
+  {
+   "id": "c2.watch.gold",
+   "cat": "acc",
+   "price": 9,
+   "name": "Gold Watch",
+   "contents": null
+  },
+  {
+   "id": "c2.watch.silver",
+   "cat": "acc",
+   "price": 7,
+   "name": "Silver Watch",
+   "contents": null
+  },
+  {
+   "id": "c2.wrist.crimson",
+   "cat": "acc",
+   "price": 3,
+   "name": "Crimson Wristbands",
+   "contents": null
+  },
+  {
+   "id": "c2.wrist.gold",
+   "cat": "acc",
+   "price": 3,
+   "name": "Gold Wristbands",
+   "contents": null
+  },
+  {
+   "id": "c2.wrist.neon",
+   "cat": "acc",
+   "price": 3,
+   "name": "Neon Wristbands",
+   "contents": null
+  }
+ ]
+}

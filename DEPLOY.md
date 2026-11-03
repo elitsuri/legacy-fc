@@ -1,0 +1,121 @@
+# פריסה לייצור · Deploying LEGACY FC to production
+
+What you get: accounts, cloud saves, friends and profiles, a leaderboard, and a store that takes payments through **Stripe Checkout**.
+Card data never touches this server. Items are unlocked only when the server itself learns the payment succeeded.
+
+> **Read first — what was and was not verified.** See the last section. In short: the whole flow is tested end to end with a *local mock of Stripe*
+> and with the real Stripe webhook-signature code. It has **not** been run against a real Stripe account, a hosted PostgreSQL or a built Docker image
+> (Docker Desktop could not start on the build machine). Do the "first deploy checklist" below in **Stripe TEST mode** before taking real money.
+
+---------------------------------------------------------------------------------------------------
+
+## 1. What you need to create (I cannot do these for you)
+
+| Thing | Why | Where |
+|---|---|---|
+| **Hosted PostgreSQL** | the database must not be local | Neon, Supabase, Render Postgres, AWS RDS, ... |
+| **Stripe account** | takes the payments | https://dashboard.stripe.com (start in *test mode*) |
+| **A host for the container** | runs the app | Render, Railway, Fly.io, or a VPS |
+| **A domain with HTTPS** | Stripe live mode requires https | your DNS + the host's TLS |
+| **Business and legal details** | selling to consumers | fill the `[...]` placeholders in `frontend/public/legal/*.html` and have them reviewed |
+
+## 2. The database
+
+1. Create a PostgreSQL database in the provider. Copy the connection string.
+2. Use it as `DATABASE_URL`. `postgres://` and `postgresql://` are accepted and converted to the `psycopg` driver automatically.
+   Add `?sslmode=require` if the provider asks for TLS (Neon and Supabase do).
+3. Nothing else: the app creates and upgrades its own tables with Alembic migrations (`backend/migrations`) every time it starts,
+   guarded by a PostgreSQL advisory lock so several instances starting together cannot collide.
+4. In production the app **refuses to start** with a SQLite URL. Turn on the provider's automatic backups / point-in-time recovery.
+
+## 3. Secrets and settings (environment variables)
+
+| Variable | Value |
+|---|---|
+| `APP_ENV` | `production` |
+| `SECRET_KEY` | `python -c "import secrets;print(secrets.token_urlsafe(48))"` (changing it later logs everyone out) |
+| `DATABASE_URL` | from step 2 |
+| `PUBLIC_BASE_URL` | `https://your-domain` (Stripe sends customers back here) |
+| `STRIPE_SECRET_KEY` | `sk_test_...` first, `sk_live_...` only when ready |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_...` from step 4 |
+
+The app will not start in production if: the secret is weak, the database is SQLite, a Stripe key is set without the webhook secret,
+`PUBLIC_BASE_URL` is still localhost while payments are on, or a live key is used with a non-https address.
+
+## 4. Stripe (do this in TEST mode first)
+
+The app needs two Stripe values together (a key without the webhook secret refuses to start), and the webhook secret only exists once the
+endpoint exists, so the order is:
+
+1. **Deploy first without any Stripe variables.** Payments stay off; the site works. Note its public URL.
+2. Stripe Dashboard -> Developers -> Webhooks -> **Add endpoint**: `https://your-domain/api/stripe/webhook`, events:
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`,
+   `checkout.session.expired`, `charge.refunded`, `charge.dispute.created`.
+3. Copy the endpoint's **Signing secret** (`whsec_...`) and, from Developers -> API keys, the **test** secret key (`sk_test_...`).
+4. Set `STRIPE_WEBHOOK_SECRET` and `STRIPE_SECRET_KEY`, redeploy. `GET /api/config` now shows `payments.enabled: true, mode: "test"`.
+5. Open the game, create an account, buy an item with the test card `4242 4242 4242 4242` (any future date, any CVC).
+   Check: the item unlocks, *Account -> Purchases* shows it as paid with a TEST badge, and the Stripe dashboard shows the payment.
+6. In the Stripe dashboard refund that payment fully: the item must disappear from the account (the webhook revokes it).
+
+**Going live**: finish Stripe's account activation (business details, bank account) -> switch to live keys -> create a **new webhook endpoint in live mode**
+(it has its own signing secret) -> update the two variables -> redeploy -> buy one real item yourself and refund it.
+Prices are fixed in the code (`backend/app/catalog.json`, exported from the game; amounts are in ILS). To change a price, change it in the game and run
+`node e2e/export-catalog.cjs <game index.html>`; a test fails if the two drift apart.
+
+## 5. Running it
+
+**Render / Railway / Fly.io (container)**: point at this repository's `Dockerfile`, set the variables from step 3, expose port 8000
+(health check path `/api/health`). Run **one instance** (see "Scaling").
+
+**Your own server with Docker Compose**
+```bash
+cp .env.example .env        # fill it in (DATABASE_URL = the hosted database)
+docker compose up -d --build
+```
+Put HTTPS in front, for example Caddy: `your-domain { reverse_proxy localhost:8000 }`.
+
+**Try everything locally against a throw-away PostgreSQL (development only)**
+```bash
+docker compose --profile localdb up -d --build   # with DATABASE_URL=postgresql+psycopg://legacyfc:devonly@db:5432/legacyfc
+```
+
+## 6. First deploy checklist
+
+- [ ] `GET /api/health` -> `{"ok": true}`
+- [ ] `GET /api/config` -> `payments.enabled: true`, `mode: "test"`
+- [ ] Register, buy a test item, see it unlocked; refund it, see it removed
+- [ ] Two accounts: search, add friend, accept, friends ranking
+- [ ] Stripe dashboard -> Webhooks -> the endpoint shows successful deliveries (HTTP 200)
+- [ ] Legal pages filled in and reviewed; links in the sign-up form work
+- [ ] Database backups on; you know how to restore one
+
+## 7. Operating it
+
+- **Refunds and disputes**: do them in the Stripe dashboard. The webhook removes the item automatically. Order history is kept in the `orders` table even after a user deletes the account (unlinked, for accounting).
+- **Logs**: the app logs every API call and every order state change (`legacyfc.store`). A webhook that fails returns 500 so Stripe retries it for days; events are processed at most once.
+- **Scaling**: the login/checkout/search rate limiter lives in the process. Run a single instance, or add a shared limiter at the proxy before scaling out.
+- **Updates**: deploy a new image; migrations run on start. Never edit tables by hand.
+
+## 8. What is NOT included (be honest with yourself before launch)
+
+- **No password reset or e-mail.** A player who forgets the password cannot recover the account. Needs an e-mail provider (SMTP/Resend/SES).
+- **No admin panel or moderation tools**, no chat, no reporting of players. Friends and profiles exist; messaging deliberately does not.
+- **No real-time multiplayer.** Players are linked by accounts, friends, profiles and rankings. Matches are single-player against the AI.
+- **The leaderboard is not anti-cheat verified** (the game runs in the browser). Items are cosmetic only, so cheating cannot buy or change anything paid.
+- **No tax invoices / VAT handling.** Israeli VAT and invoicing for digital goods are your responsibility (Stripe Tax or an accountant).
+- **No monitoring/alerting, no load test.** Add uptime checks on `/api/health` and error tracking (e.g. Sentry) before real traffic.
+- **Legal pages are templates**, not legal advice.
+
+## 9. What was verified in this repository (and what was not)
+
+Verified by automated tests that were run:
+- 49 backend tests (SQLite): signed-webhook verification (real Stripe algorithm, forged/old/tampered payloads rejected), idempotent fulfilment and event replay,
+  wrong amount/currency/mode never grants, refunds and disputes revoke, server-side prices, ownership cannot be written by the client, rate limits,
+  friends/search/blocking privacy, config safety rules, migrations equal the models.
+- A full-stack browser test (`e2e/online-store.cjs`, 23 checks): real backend + built shell + built game; buy in the game -> checkout -> payment -> webhook -> return -> item
+  owned; doctored save loses unpaid items; refund removes the item; friends search/request/accept/ranking in the UI; Content-Security-Policy blocks nothing needed.
+  **Stripe itself is a local mock here.**
+- The existing online flow (`e2e/e2e.cjs`, 14 checks) and all game suites.
+
+**Not verified**: a real Stripe account/keys/dashboard; a real hosted PostgreSQL (tests used SQLite - run the backend tests with `TEST_DATABASE_URL=postgresql+psycopg://...`
+against your database before launch); building and running the Docker image (Docker Desktop could not start on the machine used); behaviour under load; a physical phone.

@@ -1,0 +1,25 @@
+{
+  "name": "legacy-fc-e2e",
+  "private": true,
+  "description": "Browser tests: full online flow (e2e.cjs) and game-only checks on the built game file.",
+  "scripts": {
+    "online": "node e2e.cjs http://localhost:8000 ./out",
+    "game:movement": "node game-movement.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:regression": "node game-regression.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:perf": "node game-perf.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:live": "node game-livematch.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:city": "node game-citylife.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:interiors": "node game-interiors.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:drills": "node game-drills.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:career": "node game-career.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:keys": "node game-keys.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:present": "node game-present.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:fairness": "node game-fairness.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:store": "node game-store.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "online:store": "node online-store.cjs",
+    "catalog:check": "node export-catalog.cjs \"$PWD/../frontend/public/game/index.html\" check",
+    "game:anim": "node game-anim.cjs \"$PWD/../frontend/public/game/index.html\"",
+    "game:phone": "node game-phone.cjs \"$PWD/../frontend/public/game/index.html\""
+  },
+  "dependencies": { "puppeteer-core": "23.11.1" }
+}

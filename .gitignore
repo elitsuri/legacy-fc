@@ -1,0 +1,17 @@
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+frontend/dist/
+backend/data/
+.env
+*.db
+e2e/*.png
+game/.build_check.js
+e2e/out-*.txt
+backups/
+e2e/shots/
+*.tgz
+.env.*
+!.env.example
+*.tsbuildinfo
