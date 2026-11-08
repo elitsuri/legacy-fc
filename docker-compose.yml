@@ -17,6 +17,8 @@ services:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
     ports: ["${PORT:-8000}:8000"]
+    depends_on:  # only with --profile localdb; ignored when the database is hosted
+      db: { condition: service_healthy, required: false }
   db:
     profiles: ["localdb"]
     image: postgres:16-alpine

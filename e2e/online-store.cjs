@@ -1,7 +1,7 @@
 // Full-stack check of purchases and friends: the real backend (uvicorn + database), the built React shell and the built game in a real
 // browser. Only Stripe itself is replaced by a small local mock that speaks its API shape and signs webhooks with the real scheme,
 // so this proves OUR side end to end; it does not prove the live Stripe account, keys or dashboard settings.
-// usage: CHROME_PATH=... node online-store.cjs   (needs backend/.venv with requirements installed, and `npm run build` in frontend/)
+// usage: CHROME_PATH=... node online-store.cjs   (needs backend/.venv with requirements installed, and `npm run build` in frontend/)  (E2E_DATABASE_URL=postgresql+psycopg://... runs it on PostgreSQL)
 const puppeteer=require('puppeteer-core'),path=require('path'),fs=require('fs'),http=require('http'),crypto=require('crypto'),{spawn}=require('child_process');
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const ROOT=path.join(__dirname,'..'),BACK=path.join(ROOT,'backend'),PORT=8765,MOCK=8766,BASE=`http://localhost:${PORT}`,WHSEC='whsec_e2e_mock';
@@ -25,7 +25,7 @@ async function webhook(type,obj){const ev={id:'evt_mock_'+(++nEvt),object:'event
 const api=async(method,p,tok,body)=>{const r=await fetch(`${BASE}/api${p}`,{method,headers:Object.assign({'content-type':'application/json'},tok?{authorization:'Bearer '+tok}:{}),body:body?JSON.stringify(body):undefined});const t=await r.text();let j=null;try{j=JSON.parse(t)}catch(e){}return{s:r.status,j}};
 (async()=>{
  mock.listen(MOCK);try{fs.rmSync(path.join(BACK,'data','e2e.db'),{force:true})}catch(e){}
- const env=Object.assign({},process.env,{APP_ENV:'development',SECRET_KEY:'e2e-'+'x'.repeat(40),DATABASE_URL:'sqlite:///./data/e2e.db',STATIC_DIR:path.join(ROOT,'frontend','dist'),
+ const env=Object.assign({},process.env,{APP_ENV:'development',SECRET_KEY:'e2e-'+'x'.repeat(40),DATABASE_URL:process.env.E2E_DATABASE_URL||'sqlite:///./data/e2e.db',STATIC_DIR:path.join(ROOT,'frontend','dist'),
   STRIPE_SECRET_KEY:'sk_test_e2e_mock',STRIPE_WEBHOOK_SECRET:WHSEC,STRIPE_API_BASE:`http://localhost:${MOCK}`,PUBLIC_BASE_URL:BASE,AUTH_RATE_PER_MINUTE:'1000',RUN_MIGRATIONS:'1'});
  const srv=spawn(PY,['-m','uvicorn','app.main:app','--port',String(PORT),'--log-level','warning'],{cwd:BACK,env,stdio:['ignore','pipe','pipe']});let srvLog='';srv.stderr.on('data',d=>srvLog+=d);srv.stdout.on('data',d=>srvLog+=d);
  for(let i=0;i<60;i++){try{if((await fetch(BASE+'/api/health')).ok)break}catch(e){}await wait(500)}
