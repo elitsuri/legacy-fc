@@ -4,8 +4,8 @@ What you get: accounts, cloud saves, friends and profiles, a leaderboard, and a 
 Card data never touches this server. Items are unlocked only when the server itself learns the payment succeeded.
 
 > **Read first — what was and was not verified.** See the last section. In short: the whole flow is tested end to end with a *local mock of Stripe*
-> and with the real Stripe webhook-signature code. It has **not** been run against a real Stripe account, a hosted PostgreSQL or a built Docker image
-> (Docker Desktop could not start on the build machine). Do the "first deploy checklist" below in **Stripe TEST mode** before taking real money.
+> and with the real Stripe webhook-signature code. The Docker image was built and run against PostgreSQL 16 (in a container on the build machine).
+> It has **not** been run against a real Stripe account or a *hosted* PostgreSQL provider. Do the "first deploy checklist" below in **Stripe TEST mode** before taking real money.
 
 ---------------------------------------------------------------------------------------------------
 
@@ -130,5 +130,9 @@ Verified by automated tests that were run:
   **Stripe itself is a local mock here.**
 - The existing online flow (`e2e/e2e.cjs`, 14 checks) and all game suites.
 
-**Not verified**: a real Stripe account/keys/dashboard; a real hosted PostgreSQL (tests used SQLite - run the backend tests with `TEST_DATABASE_URL=postgresql+psycopg://...`
-against your database before launch); building and running the Docker image (Docker Desktop could not start on the machine used); behaviour under load; a physical phone.
+- On Docker + PostgreSQL 16 (2026-11-08): the image builds; as a non-root user it migrates an empty PostgreSQL and serves the site with the security headers;
+  its Docker health check turns healthy; it keeps working after the database restarts; `docker compose --profile localdb` starts db then app.
+  The 50 backend tests and the 23-check browser test (`E2E_DATABASE_URL=...`) also pass on PostgreSQL.
+
+**Not verified**: a real Stripe account/keys/dashboard; a hosted PostgreSQL provider (Neon/Supabase: TLS, connection limits); the Render deploy itself;
+behaviour under load; a physical phone.
