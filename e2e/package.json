@@ -19,6 +19,7 @@
     "online:store": "node online-store.cjs",
     "catalog:check": "node export-catalog.cjs \"$PWD/../frontend/public/game/index.html\" check",
     "online:google": "node online-google.cjs",
+    "game:fx": "node game-fx.cjs \"$PWD/../frontend/public/game/index.html\"",
     "game:music": "node game-music.cjs \"$PWD/../frontend/public/game/index.html\"",
     "game:anim": "node game-anim.cjs \"$PWD/../frontend/public/game/index.html\"",
     "game:phone": "node game-phone.cjs \"$PWD/../frontend/public/game/index.html\""

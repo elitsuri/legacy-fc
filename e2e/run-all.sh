@@ -2,7 +2,7 @@
 # runs every browser suite one after another and prints one summary line each (CHROME_PATH must be set)
 ROOT=$(cd .. && pwd); case "$(uname)" in MINGW*|MSYS*) ROOT=$(cd .. && pwd -W);; esac
 G="$ROOT/frontend/public/game/index.html"
-for s in anim music store fairness regression movement live city citylife interiors drills career phone keys present; do
+for s in anim music fx store fairness regression movement live city citylife interiors drills career phone keys present; do
   f=game-$s.cjs; [ "$s" = live ] && f=game-livematch.cjs; [ "$s" = city ] && f=game-city.cjs
   [ -f "$f" ] || continue
   out=$(node "$f" "$G" 2>&1); code=$?

@@ -181,6 +181,12 @@ real Google sign-in have not been exercised: setup steps are in DEPLOY.md sectio
 Touch screens wider than 640 px keep the normal layout but get a bigger picture (portrait: full width; landscape: as tall as fits) and
 finger-sized buttons at the bottom. Phones keep the touch panel / floating controls (v9).
 
+## אווירה / Atmosphere (v10, `game/src/p10n.js`)
+
+Cosmetic only: dust puffs behind Eli when he runs (earthy on grass, pale on paving) and a few fireflies on clear warm nights in the park.
+Drawn after the world and never read by the game logic (`game-fx.cjs`: same state with the effects on or off, under 1.5 ms per frame).
+`FX10.off` switches them off if they ever throw. `e2e/run-all.sh` runs every browser suite in turn and prints one line each.
+
 ## איזון / Balance (v9)
 
 Live match (`LMBAL` in `game/src/p10a.js`): after the usual attribute compression, the gap between the two teams' averages is
