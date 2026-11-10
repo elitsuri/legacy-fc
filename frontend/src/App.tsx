@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
-import { api, ApiError, getToken, setToken, type BackupMeta, type CloudSave, type Entitlements, type LeaderRow, type OrderRow, type PaymentsInfo, type User } from './api'
+import { api, ApiError, getToken, setToken, type BackupMeta, type CloudSave, type Entitlements, type GoogleInfo, type LeaderRow, type OrderRow, type PaymentsInfo, type User } from './api'
 import { GameBridge } from './bridge'
 import { FriendsPanel } from './FriendsPanel'
+import { GoogleButton } from './GoogleButton'
 import { initialLang, tr, type Key, type Lang } from './i18n'
 import { useCloudSync, type SyncStatus } from './useCloudSync'
 
@@ -18,6 +19,7 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null)
   const sync = useCloudSync(bridge, user)
   const [pay, setPay] = useState<PaymentsInfo | null>(null)
+  const [google, setGoogle] = useState<GoogleInfo | null>(null)
   const [ent, setEnt] = useState<Entitlements | null>(null)
   const [readyN, setReadyN] = useState(0)
 
@@ -37,7 +39,7 @@ export default function App() {
     api.health().then(() => setOnline(true)).catch(() => setOnline(false))
     if (getToken()) api.me().then(setUser).catch(() => setToken(null))
   }, [])
-  useEffect(() => { api.config().then((c) => setPay(c.payments)).catch(() => undefined) }, [])
+  useEffect(() => { api.config().then((c) => { setPay(c.payments); setGoogle(c.google ?? null) }).catch(() => undefined) }, [])
   const refreshEnt = useCallback(async () => {
     if (!getToken() || !pay?.enabled) { setEnt(null); return null }
     const e = await api.entitlements(); setEnt(e); return e
@@ -106,7 +108,7 @@ export default function App() {
       <main className="stage">
         <iframe ref={frameRef} src="/game/index.html" title="LEGACY FC" allow="autoplay; fullscreen" onLoad={() => bridge.focus()} />
       </main>
-      {panel === 'auth' && <AuthPanel t={t} onClose={close} onDone={signedIn} />}
+      {panel === 'auth' && <AuthPanel t={t} lang={lang} google={google} onClose={close} onDone={signedIn} />}
       {panel === 'board' && <BoardPanel t={t} onClose={close} me={user?.id} />}
       {panel === 'cloud' && user && <CloudPanel t={t} onClose={close} onRestore={async (c) => { await bridge.importSave(c.data); setToast(t('restored')); close() }} />}
       {panel === 'friends' && user && <FriendsPanel t={t} Modal={Modal} onClose={close} />}
@@ -164,7 +166,7 @@ function useErr() {
   return { err, run }
 }
 
-function AuthPanel({ t, onClose, onDone }: { t: (k: Key) => string; onClose: () => void; onDone: (tok: string, u: User) => void }) {
+function AuthPanel({ t, lang, google, onClose, onDone }: { t: (k: Key) => string; lang: Lang; google: GoogleInfo | null; onClose: () => void; onDone: (tok: string, u: User) => void }) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [u, setU] = useState(''); const [p, setP] = useState(''); const [d, setD] = useState('')
   const { err, run } = useErr()
@@ -173,7 +175,11 @@ function AuthPanel({ t, onClose, onDone }: { t: (k: Key) => string; onClose: () 
   return (
     <Modal title={mode === 'login' ? t('login') : t('register')} onClose={onClose} t={t}>
       <p className="muted">{t('why')}</p>
-      {mode === 'register' && <p className="muted small">{t('legalAgree')} <a href="/legal/terms.html" target="_blank" rel="noopener">{t('terms')}</a> · <a href="/legal/privacy.html" target="_blank" rel="noopener">{t('privacy')}</a> · <a href="/legal/refunds.html" target="_blank" rel="noopener">{t('refunds')}</a></p>}
+      {google?.enabled && google.client_id && <>
+        <GoogleButton clientId={google.client_id} lang={lang} unavailable={t('googleDown')} onCredential={(c) => { setBusy(true); void run(async () => { const r = await api.googleLogin(c); onDone(r.token, r.user) }).finally(() => setBusy(false)) }} />
+        <div className="or"><span>{t('orWith')}</span></div>
+      </>}
+      {(mode === 'register' || google?.enabled) && <p className="muted small">{t('legalAgree')} <a href="/legal/terms.html" target="_blank" rel="noopener">{t('terms')}</a> · <a href="/legal/privacy.html" target="_blank" rel="noopener">{t('privacy')}</a> · <a href="/legal/refunds.html" target="_blank" rel="noopener">{t('refunds')}</a></p>}
       <form onSubmit={submit} className="form">
         <label>{t('username')}<input value={u} onChange={(e) => setU(e.target.value)} autoComplete="username" required minLength={3} maxLength={32} autoFocus /></label>
         {mode === 'register' && <label>{t('displayName')}<input value={d} onChange={(e) => setD(e.target.value)} maxLength={40} /></label>}

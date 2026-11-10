@@ -41,11 +41,18 @@ class Settings:
     checkout_rate_per_minute: int = field(default_factory=lambda: int(os.getenv("CHECKOUT_RATE_PER_MINUTE", "8")))
     social_rate_per_minute: int = field(default_factory=lambda: int(os.getenv("SOCIAL_RATE_PER_MINUTE", "60")))
     allow_sqlite_in_production: bool = field(default_factory=lambda: _bool("ALLOW_SQLITE_IN_PRODUCTION", False))
+    # "Sign in with Google": the OAuth client ID is public (it is shown to the browser); the server only verifies Google's signed ID token.
+    google_client_id: str = field(default_factory=lambda: os.getenv("GOOGLE_CLIENT_ID", "").strip())
+    google_jwks_url: str = field(default_factory=lambda: os.getenv("GOOGLE_JWKS_URL", "https://www.googleapis.com/oauth2/v3/certs").strip())
     run_migrations: bool = field(default_factory=lambda: _bool("RUN_MIGRATIONS", False))
 
     @property
     def is_production(self) -> bool:
         return self.app_env.lower() == "production"
+
+    @property
+    def google_enabled(self) -> bool:
+        return bool(self.google_client_id)
 
     @property
     def payments_enabled(self) -> bool:
@@ -79,6 +86,10 @@ def load_settings() -> Settings:
         raise RuntimeError("SECRET_KEY is too short for production (need at least 32 characters).")
     if s.stripe_api_base and s.is_production:
         raise RuntimeError("STRIPE_API_BASE is for tests only and must not be set in production.")
+    if s.is_production and s.google_jwks_url != "https://www.googleapis.com/oauth2/v3/certs":
+        raise RuntimeError("GOOGLE_JWKS_URL is for tests only and must not be changed in production.")
+    if s.google_client_id and not s.google_client_id.endswith(".apps.googleusercontent.com"):
+        raise RuntimeError("GOOGLE_CLIENT_ID should look like 123-abc.apps.googleusercontent.com (the OAuth client ID, not the secret).")
     if s.stripe_secret_key and not s.stripe_webhook_secret:
         raise RuntimeError("STRIPE_SECRET_KEY is set but STRIPE_WEBHOOK_SECRET is not: purchases could never be fulfilled safely.")
     if s.is_production and s.database_url.startswith("sqlite") and not s.allow_sqlite_in_production:

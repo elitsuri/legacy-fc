@@ -157,6 +157,30 @@ standing with the ball holds it at his chest. Walking arms swing more. Room staf
 around now and then; the gym trainer does jumping jacks and stretches. `ANIM10.off` switches the layer off if it ever throws.
 `node game-sheet.cjs … prefix` also renders the new poses (`prefix-anim.png`).
 
+## מוזיקה / Music (v10, `game/src/p10l.js`)
+
+The old square-wave loops are replaced by a small composer: soft plucks, bells, electric piano and harp over pads, a gentle bass and
+quiet drums. Every place has a mood (title, city by day and by night, street, park, beach, cafe, stadium, sport, club, shop, clinic,
+home, travel, lounge, live match, battle). Walking somewhere else fades the old track out and a new one in; every visit composes a
+new tune from a seeded random walk over the mood's chords, and each tune keeps varying every 8 bars. Music has its own random stream
+and never touches the match engine's. `MUS10.off` switches it off if it ever throws. `game-music.cjs` tests the composer (valid,
+in-scale, deterministic), the place-to-mood mapping, fades, new tunes per visit and mute. Whether it sounds good is a matter of taste:
+the tests cannot judge that.
+
+## התחברות עם גוגל / Sign in with Google (v10)
+
+`POST /api/auth/google` verifies Google's ID token on the server (RS256 signature from Google's published keys, issuer, audience = your
+client ID, expiry, verified e-mail) and signs the player in, creating the account on first use. Only Google's account id is stored;
+the account has no usable password. Needs `GOOGLE_CLIENT_ID` (public). The page loads Google's script only when the server says it is
+configured, and the CSP then allows exactly Google's button script/frame/style. Tests: `backend/tests/test_google.py` (real signatures,
+a throw-away key) and `e2e/online-google.cjs` (browser + a local stand-in for Google's servers only). A real Google client ID and a
+real Google sign-in have not been exercised: setup steps are in DEPLOY.md section 4b.
+
+## טאבלט / Tablets (v10, `game/src/p10m.js`)
+
+Touch screens wider than 640 px keep the normal layout but get a bigger picture (portrait: full width; landscape: as tall as fits) and
+finger-sized buttons at the bottom. Phones keep the touch panel / floating controls (v9).
+
 ## איזון / Balance (v9)
 
 Live match (`LMBAL` in `game/src/p10a.js`): after the usual attribute compression, the gap between the two teams' averages is
@@ -181,6 +205,8 @@ node game-city.cjs "$PWD/../frontend/public/game/index.html" after 2   # city vi
 node game-balance.cjs "$PWD/../frontend/public/game/index.html" 10 6   # live-match balance report (120 AI matches, ~2 min)
 # balance switches: SYM=1 same tactic+formation, EQ=1 Eli gets a team-mate's attributes, TAC1 / FM1 / TACJ force the opponent's tactic / formation
 npm run online                                        # needs the server on :8000 with STATIC_DIR set
+node online-google.cjs                                # Continue with Google, browser + a stand-in for Google's servers
+node game-music.cjs "$PWD/../frontend/public/game/index.html"   # music composer, moods, fades
 node online-store.cjs                                 # full stack: backend + shell + game + friends + purchases (Stripe replaced by a local mock); needs backend/.venv and `npm run build` in frontend/
 npm run catalog:check                                 # fails if backend/app/catalog.json differs from what the game sells
 ```

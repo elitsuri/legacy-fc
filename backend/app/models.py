@@ -22,6 +22,7 @@ class User(Base):
     token_version: Mapped[int] = mapped_column(Integer, default=0)  # bump to log out every device
     on_leaderboard: Mapped[bool] = mapped_column(Boolean, default=True)
     discoverable: Mapped[bool] = mapped_column(Boolean, default=True)  # appears in user search (exact username always works)
+    google_sub: Mapped[str | None] = mapped_column(String(64), unique=True, index=True, nullable=True)  # Google account id (never the e-mail)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

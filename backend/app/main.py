@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import secrets
 import time
 from datetime import timezone
 from contextlib import asynccontextmanager
@@ -28,6 +29,7 @@ from .config import settings
 from .db import get_db, init_db, run_migrations
 from .models import LeaderboardEntry, Save, SaveBackup, User
 from .ratelimit import RateLimiter, client_ip
+from . import security
 from .security import create_token, current_user, hash_password, needs_rehash, verify_password
 
 API_VERSION = "1.0.0"
@@ -62,8 +64,17 @@ app.add_middleware(
 _CSP_COMMON = ("default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; "
                "img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self'; frame-src 'self'; worker-src 'self'; manifest-src 'self'; "
                "base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'self'")
-CSP_SHELL = _CSP_COMMON + "; script-src 'self'"
 CSP_GAME = _CSP_COMMON + "; script-src 'self' 'unsafe-inline'"
+
+
+def csp_shell() -> str:
+    csp = _CSP_COMMON + "; script-src 'self'"
+    if settings.google_enabled:  # only when Google sign-in is configured: Google's button script, its frame and its style (per Google's CSP guide)
+        csp = (csp.replace("script-src 'self'", "script-src 'self' https://accounts.google.com/gsi/client")
+               .replace("connect-src 'self'", "connect-src 'self' https://accounts.google.com/gsi/")
+               .replace("frame-src 'self'", "frame-src 'self' https://accounts.google.com/gsi/")
+               .replace("style-src 'self' 'unsafe-inline'", "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style"))
+    return csp
 
 
 @app.middleware("http")
@@ -79,7 +90,7 @@ async def security_headers(request: Request, call_next):
     if not request.url.path.startswith("/api/"):
         # the game page is one self-contained file with inline script; the shell is plain bundled script. Card data never touches us
         # (Stripe's hosted page), so nothing third-party is allowed to run here; only Google Fonts for text.
-        resp.headers.setdefault("Content-Security-Policy", CSP_GAME if request.url.path.startswith("/game") else CSP_SHELL)
+        resp.headers.setdefault("Content-Security-Policy", CSP_GAME if request.url.path.startswith("/game") else csp_shell())
     if request.url.path.startswith("/api/"):
         resp.headers.setdefault("Cache-Control", "no-store")
         log.info("%s %s %s %.1fms", request.method, request.url.path, resp.status_code, (time.perf_counter() - t0) * 1000)
@@ -116,6 +127,10 @@ class RegisterIn(BaseModel):
 class LoginIn(BaseModel):
     username: str = Field(min_length=1, max_length=32)
     password: str = Field(min_length=1, max_length=128)
+
+
+class GoogleIn(BaseModel):
+    credential: str = Field(min_length=20, max_length=4096)
 
 
 class TokenOut(BaseModel):
@@ -177,6 +192,7 @@ def public_config() -> dict:
         "max_save_bytes": settings.max_save_bytes,
         # enabled only when Stripe keys are configured; mode is "test" for sk_test_ keys (no real money) and "live" otherwise
         "payments": store.payments_info(),
+        "google": {"enabled": settings.google_enabled, "client_id": settings.google_client_id or None},
         "score_formula": "level*100 + goals*25 + trophies*500 + min(fans,200000)/10 + legacy_cards*40",
     }
 
@@ -207,6 +223,43 @@ def login(body: LoginIn, request: Request, db: Session = Depends(get_db)) -> Tok
     if needs_rehash(user.password_hash):
         user.password_hash = hash_password(body.password)
         db.commit()
+    return TokenOut(token=create_token(user), user=user_out(user))
+
+
+def _free_username(db: Session, seed: str) -> str:
+    base = re.sub(r"[^a-z0-9_.-]", "", seed.lower())[:20] or "player"
+    if len(base) < 3:
+        base = (base + "player")[:20]
+    for i in range(0, 50):
+        cand = base if i == 0 else f"{base}{secrets.randbelow(9000) + 1000}"
+        if db.scalar(select(User.id).where(User.username == cand)) is None:
+            return cand
+    return f"player{secrets.token_hex(4)}"
+
+
+@app.post("/api/auth/google", response_model=TokenOut)
+def google_login(body: GoogleIn, request: Request, db: Session = Depends(get_db)) -> TokenOut:
+    """Sign in (or create the account on first use) with a Google ID token. The server verifies the token itself; the browser's word is not enough."""
+    auth_limiter.check("google:" + client_ip(request))
+    claims = security.verify_google_credential(body.credential)
+    sub = str(claims["sub"])
+    user = db.scalar(select(User).where(User.google_sub == sub))
+    if user is None:
+        if not settings.allow_registration:
+            raise HTTPException(403, "Registration is closed")
+        name = " ".join(str(claims.get("name") or "").split())[:40]
+        local = str(claims.get("email") or "").split("@")[0]
+        user = User(username=_free_username(db, local or name), display_name=name or local[:40] or "Player", google_sub=sub,
+                    password_hash=hash_password(secrets.token_urlsafe(48)))  # nobody knows this password: the account signs in with Google only
+        db.add(user)
+        try:
+            db.commit()
+        except IntegrityError:  # two first sign-ins at once, or a username race: look again, then fail cleanly
+            db.rollback()
+            user = db.scalar(select(User).where(User.google_sub == sub))
+            if user is None:
+                raise HTTPException(409, "Please try again") from None
+        db.refresh(user)
     return TokenOut(token=create_token(user), user=user_out(user))
 
 

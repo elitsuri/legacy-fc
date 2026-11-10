@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 import jwt
+from jwt import PyJWKClient
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 from fastapi import Depends, HTTPException, status
@@ -63,3 +64,30 @@ def current_user(
     if user is None or payload.get("tv") != user.token_version:
         raise _unauthorized("Session is no longer valid")
     return user
+
+
+# ---------------------------------------------------------------- Sign in with Google
+GOOGLE_ISSUERS = ("https://accounts.google.com", "accounts.google.com")
+_jwks: PyJWKClient | None = None
+
+
+def _google_signing_key(credential: str):
+    """The public key Google signed this ID token with (Google's published JWKS, cached by PyJWKClient). Tests replace this."""
+    global _jwks
+    if _jwks is None or _jwks.uri != settings.google_jwks_url:
+        _jwks = PyJWKClient(settings.google_jwks_url, cache_keys=True, lifespan=3600, timeout=5)
+    return _jwks.get_signing_key_from_jwt(credential).key
+
+
+def verify_google_credential(credential: str) -> dict:
+    """Verify a Google ID token (signature, issuer, audience = our client ID, expiry, verified e-mail). Returns its claims."""
+    if not settings.google_enabled:
+        raise HTTPException(status_code=404, detail="Google sign-in is not configured")
+    try:
+        claims = jwt.decode(credential, _google_signing_key(credential), algorithms=["RS256"], audience=settings.google_client_id,
+                            options={"require": ["exp", "iat", "iss", "aud", "sub"]}, leeway=30)
+    except (jwt.PyJWTError, OSError) as e:
+        raise HTTPException(status_code=401, detail="Google sign-in could not be verified") from e
+    if claims.get("iss") not in GOOGLE_ISSUERS or not claims.get("sub") or claims.get("email_verified") is not True:
+        raise HTTPException(status_code=401, detail="Google sign-in could not be verified")
+    return claims

@@ -15,7 +15,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / "src"
 MODULES = ["p7a", "p7b1", "p7b2", "p7c", "p7d1", "p7d2", "p7e1", "p7e2", "p7f1", "p7f2",
-           "p8a", "p8b", "p8c", "p8d", "p8e", "p8f", "p8g", "p8h", "p7g", "p8z", "p9", "p10a", "p10b", "p10c", "p10d", "p10e", "p10f", "p10g", "p10h", "p10i", "p10j", "p10k"]
+           "p8a", "p8b", "p8c", "p8d", "p8e", "p8f", "p8g", "p8h", "p7g", "p8z", "p9", "p10a", "p10b", "p10c", "p10d", "p10e", "p10f", "p10g", "p10h", "p10i", "p10j", "p10k", "p10l", "p10m"]
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--out", default=str(ROOT.parent / "frontend" / "public" / "game" / "index.html"))

@@ -51,6 +51,7 @@ Card data never touches this server. Items are unlocked only when the server its
 | `PUBLIC_BASE_URL` | `https://your-domain` (Stripe sends customers back here; optional on Render, which provides its own address) |
 | `STRIPE_SECRET_KEY` | `sk_test_...` first, `sk_live_...` only when ready |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` from step 4 |
+| `GOOGLE_CLIENT_ID` | optional, step 4b |
 
 The app will not start in production if: the secret is weak, the database is SQLite, a Stripe key is set without the webhook secret,
 `PUBLIC_BASE_URL` is still localhost while payments are on, or a live key is used with a non-https address.
@@ -74,6 +75,17 @@ endpoint exists, so the order is:
 (it has its own signing secret) -> update the two variables -> redeploy -> buy one real item yourself and refund it.
 Prices are fixed in the code (`backend/app/catalog.json`, exported from the game; amounts are in ILS). To change a price, change it in the game and run
 `node e2e/export-catalog.cjs <game index.html>`; a test fails if the two drift apart.
+
+## 4b. "Continue with Google" (optional)
+
+Players can sign in with one click through their Google account. The server verifies Google's signed token itself and stores only Google's
+account id (never the e-mail). It needs one public value, created in your own Google account:
+
+1. https://console.cloud.google.com -> create or pick a project -> **APIs & Services -> OAuth consent screen** (External; app name, support e-mail; add your domain).
+2. **Credentials -> Create credentials -> OAuth client ID -> Web application**. Under **Authorized JavaScript origins** add `https://<your-render-address>` (and your own domain later). No redirect URI is needed.
+3. Copy the **Client ID** (`...apps.googleusercontent.com`; it is public, the client *secret* is not used and must not be added anywhere).
+4. Render -> Environment -> `GOOGLE_CLIENT_ID` = that value -> save. `GET /api/config` then shows `google.enabled: true` and the sign-in panel shows Google's button.
+5. While the consent screen is in "Testing" only the test users you list can sign in; click **Publish app** when ready for everyone.
 
 ## 5. Running it
 

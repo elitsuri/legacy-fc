@@ -94,6 +94,8 @@ const T = {
   terms: ['Terms of Use', 'תנאי השימוש'],
   privacy: ['Privacy Policy', 'מדיניות הפרטיות'],
   refunds: ['Refund policy', 'מדיניות ההחזרים'],
+  orWith: ['or', 'או'],
+  googleDown: ['Google sign-in could not load. Use your username and password instead.', 'התחברות עם גוגל לא נטענה. אפשר להתחבר עם שם משתמש וסיסמה.'],
 } as const
 
 export type Key = keyof typeof T

@@ -5,7 +5,8 @@ export interface SaveMeta { version: number; checksum: string; summary: SaveSumm
 export interface CloudSave extends SaveMeta { slot: number; data: Record<string, unknown> }
 export interface BackupMeta extends SaveMeta { id: number }
 export interface LeaderRow { rank: number; user_id: number; name: string; score: number; level: number; overall: number; goals: number; trophies: number; fans: number; club: string; updated_at: string | null }
-export interface PublicConfig { registration: boolean; max_save_bytes: number; payments: PaymentsInfo; score_formula: string }
+export interface GoogleInfo { enabled: boolean; client_id: string | null }
+export interface PublicConfig { registration: boolean; max_save_bytes: number; payments: PaymentsInfo; google?: GoogleInfo; score_formula: string }
 export interface PaymentsInfo { enabled: boolean; provider: string | null; mode: 'test' | 'live' | null; currency?: string }
 export interface OrderRow { id: number; product_id: string; name: string; price: number; currency: string; status: string; mode: string; created_at: string | null; paid_at: string | null }
 export interface Entitlements { ids: string[]; orders: OrderRow[]; payments: PaymentsInfo }
@@ -43,7 +44,7 @@ async function req<T>(method: string, path: string, body?: unknown, opts: { keep
   if (!res.ok) {
     const detail = json && typeof json === 'object' && 'detail' in json ? (json as { detail: unknown }).detail : json
     const msg = typeof detail === 'string' ? detail : detail && typeof detail === 'object' && 'message' in detail ? String((detail as { message: unknown }).message) : `HTTP ${res.status}`
-    if (res.status === 401 && token && path !== '/auth/login') setToken(null)
+    if (res.status === 401 && token && path !== '/auth/login' && path !== '/auth/google') setToken(null)
     throw new ApiError(res.status, msg, detail)
   }
   return json as T
@@ -54,6 +55,7 @@ export const api = {
   health: () => req<{ ok: boolean; version: string }>('GET', '/health'),
   register: (username: string, password: string, display_name?: string) => req<{ token: string; user: User }>('POST', '/auth/register', { username, password, display_name: display_name || undefined }),
   login: (username: string, password: string) => req<{ token: string; user: User }>('POST', '/auth/login', { username, password }),
+  googleLogin: (credential: string) => req<{ token: string; user: User }>('POST', '/auth/google', { credential }),
   me: () => req<User>('GET', '/me'),
   patchMe: (body: Partial<Pick<User, 'display_name' | 'on_leaderboard' | 'discoverable'>>) => req<User>('PATCH', '/me', body),
   changePassword: (old_password: string, new_password: string) => req<{ ok: boolean; token: string }>('POST', '/me/password', { old_password, new_password }),
